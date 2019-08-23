@@ -14,80 +14,77 @@
  * @author kkunzelm
  */
 
+import ij.IJ;
+import ij.ImagePlus;
+import ij.ImageStack;
+import ij.WindowManager;
+import ij.plugin.PlugIn;
+import ij.process.ImageProcessor;
 
-import ij.*;
-import ij.plugin.*;
-import ij.process.*;
+public class SetNaN_ToZero implements PlugIn {
 
+	/** Image stack to project. */
+	private ImagePlus imp = null;
+	private ImageProcessor ip = null;
+	private ImageStack stack = null;
 
+	public void setup(String arg, ImagePlus imp) {
 
-    public class SetNaN_ToZero implements PlugIn {
-        
-        /** Image stack to project. */
-        private ImagePlus imp = null; 
-        private ImageProcessor ip = null;
-        private ImageStack stack = null;
-
-        public void setup (String arg, ImagePlus imp){
-
-        }
+	}
 	public void run(String arg) {
 
-                imp = WindowManager.getCurrentImage();
+		imp = WindowManager.getCurrentImage();
 		int stackSize = imp.getStackSize();
-		if(imp==null) {
-	    	IJ.noImage();
-	    	return;
-                }
+		if (imp == null) {
+			IJ.noImage();
+			return;
+		}
 
-                //  Make sure input image is a stack.
-		if(stackSize==1) {
+		// Make sure input image is a stack.
+		if (stackSize == 1) {
 
-                    ip = imp.getProcessor();
-                    int width = ip.getWidth();
-                    int height = ip.getHeight();
-                    int length = width * height;
+			ip = imp.getProcessor();
+			int width = ip.getWidth();
+			int height = ip.getHeight();
+			int length = width * height;
 
+			// define an array which referes to the pixels of the image
 
+			float[] arrayOfImagePixels = (float[]) ip.getPixels();
 
-                    // define an array which referes to the pixels of the image
+			for (int a = 0; a < length; a++) {
 
-                    float[] arrayOfImagePixels = (float[])ip.getPixels();
+				// if (arrayOfImagePixels[a] == 0.0)
+				if (Float.isNaN(arrayOfImagePixels[a])) {
+					arrayOfImagePixels[a] = 0;
+				}
+			}
+		}
 
+		if (stackSize > 1) {
+			for (int n = 1; n <= stackSize; n++) {
+				stack = imp.getStack();
+				ip = stack.getProcessor(n);
 
-                    for (int a=0; a < length; a++) {
+				int width = ip.getWidth();
+				int height = ip.getHeight();
+				int length = width * height;
 
-                        // if (arrayOfImagePixels[a] == 0.0)
-                            if (Float.isNaN(arrayOfImagePixels[a]))
-                            {arrayOfImagePixels[a] = 0;}
-                     }
-                 }
+				// define an array which referes to the pixels of the image
 
-                if(stackSize > 1){
-                    for (int n=1; n<=stackSize; n++){
-                        stack = imp.getStack();
-                        ip = stack.getProcessor(n);
+				float[] arrayOfImagePixels = (float[]) ip.getPixels();
 
-                        int width = ip.getWidth();
-                        int height = ip.getHeight();
-                        int length = width * height;
-
-
-                        // define an array which referes to the pixels of the image
-
-                        float[] arrayOfImagePixels = (float[])ip.getPixels();
-
-
-                        for (int a=0; a < length; a++) {
-                                if (Float.isNaN(arrayOfImagePixels[a])){
-                                    arrayOfImagePixels[a] = 0;}
-                        }
-                    }
-                }
-        }
+				for (int a = 0; a < length; a++) {
+					if (Float.isNaN(arrayOfImagePixels[a])) {
+						arrayOfImagePixels[a] = 0;
+					}
+				}
+			}
+		}
+	}
 
 	void showAbout() {
-		IJ.showMessage("About SetNaN2Zero...","This PlugIn does sets NaN to Zero !");
+		IJ.showMessage("About SetNaN2Zero...", "This PlugIn does sets NaN to Zero !");
 	}
 
 }

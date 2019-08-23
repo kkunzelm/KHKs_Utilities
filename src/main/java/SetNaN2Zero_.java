@@ -25,42 +25,33 @@ import ij.ImagePlus;
 import ij.plugin.filter.PlugInFilter;
 import ij.process.ImageProcessor;
 
-
-
-
 public class SetNaN2Zero_ implements PlugInFilter {
 
-		
 	public int setup(String arg, ImagePlus imp) {
 		return DOES_32;
 	}
 
 	public void run(ImageProcessor ip) {
 
-		
 		int width = ip.getWidth();
 		int height = ip.getHeight();
 		int length = width * height;
 
-
-
 		// define an array which referes to the pixels of the image
 
-		float[] arrayOfImagePixels = (float[])ip.getPixels();
+		float[] arrayOfImagePixels = (float[]) ip.getPixels();
 
+		for (int a = 0; a < length; a++) {
 
-		for (int a=0; a < length; a++) {
-				
-                    // if (arrayOfImagePixels[a] == 0.0)
-                        if (Float.isNaN(arrayOfImagePixels[a]))
-                        {arrayOfImagePixels[a] = 0;}
-                 }  
-        }
-
-	void showAbout() {
-		IJ.showMessage("About SetNaN2Zero...","This PlugIn does sets NaN to Zero !");
+			// if (arrayOfImagePixels[a] == 0.0)
+			if (Float.isNaN(arrayOfImagePixels[a])) {
+				arrayOfImagePixels[a] = 0;
+			}
+		}
 	}
 
+	void showAbout() {
+		IJ.showMessage("About SetNaN2Zero...", "This PlugIn does sets NaN to Zero !");
+	}
 
 }
-

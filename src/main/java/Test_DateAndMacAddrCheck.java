@@ -8,20 +8,14 @@
  * @author kkunzelm
  */
 
-
-
 import ij.plugin.PlugIn;
 
-
-
 public class Test_DateAndMacAddrCheck implements PlugIn {
-    public void run(String arg) {
-        if (DateAndMacAddrCheck.mainOfKHKsCopyProctection()){
-            System.out.println("Heureka ...");
-        }
-        else {
-            System.out.println("I am so sorry...");
-        }
-    }
+	public void run(String arg) {
+		if (DateAndMacAddrCheck.mainOfKHKsCopyProctection()) {
+			System.out.println("Heureka ...");
+		} else {
+			System.out.println("I am so sorry...");
+		}
+	}
 }
-

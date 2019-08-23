@@ -8,10 +8,9 @@
  * @author kkunzelm
  */
 public class MainVonTempMessung {
-    public static void main(String[] args) {
-        Temperaturmessung alex = new Temperaturmessung();
-        alex.getmesswert();
-    }
-
+	public static void main(String[] args) {
+		Temperaturmessung alex = new Temperaturmessung();
+		alex.getmesswert();
+	}
 
 }
