@@ -23,24 +23,19 @@ import ij.process.ImageProcessor;
 
 public class SetNaN_ToZero implements PlugIn {
 
-	/** Image stack to project. */
-	private ImagePlus imp = null;
-	private ImageProcessor ip = null;
-	private ImageStack stack = null;
-
-	public void setup(String arg, ImagePlus imp) {
-
-	}
 	public void run(String arg) {
 
-		imp = WindowManager.getCurrentImage();
+		/** Image stack to project. */
+		ImagePlus imp = WindowManager.getCurrentImage();
 		int stackSize = imp.getStackSize();
+
 		if (imp == null) {
 			IJ.noImage();
 			return;
 		}
 
 		// Make sure input image is a stack.
+		ImageProcessor ip;
 		if (stackSize == 1) {
 
 			ip = imp.getProcessor();
@@ -62,8 +57,9 @@ public class SetNaN_ToZero implements PlugIn {
 		}
 
 		if (stackSize > 1) {
+			ImageStack stack = imp.getStack();
+
 			for (int n = 1; n <= stackSize; n++) {
-				stack = imp.getStack();
 				ip = stack.getProcessor(n);
 
 				int width = ip.getWidth();

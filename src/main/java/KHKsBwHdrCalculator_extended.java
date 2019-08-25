@@ -24,9 +24,6 @@ import ij.process.ImageProcessor;
  * @author Karl-Heinz Kunzelmann <karl-heinz@kunzelmann.de>
  */
 public class KHKsBwHdrCalculator_extended implements PlugIn {
-	public static final String lutMessage = "Stacks with inverter LUTs may not project correctly.\nTo create a standard LUT, invert the stack (Edit/Invert)\nand invert the LUT (Image/Lookup Tables/Invert LUT).";
-	/** Image to hold z-projection. */
-	private ImagePlus projImage = null;
 	/** Image stack to project. */
 	private ImagePlus imp = null;
 	/** Projection starts from this slice. */
@@ -37,8 +34,6 @@ public class KHKsBwHdrCalculator_extended implements PlugIn {
 	/** general thresholds to reduze dark noise and white saturated pixels */
 	private int upperThreshold = 253;
 	private int lowerThreshold = 25;
-
-	private int sliceCount;
 
 	/** Array for weights of the slices */
 
@@ -105,7 +100,7 @@ public class KHKsBwHdrCalculator_extended implements PlugIn {
 		stopSlice = stackSize;
 
 		// Build control dialog
-		GenericDialog gd = buildControlDialog(startSlice, stopSlice);
+		GenericDialog gd = buildControlDialog();
 		gd.showDialog();
 		if (gd.wasCanceled()) {
 			return;
@@ -122,7 +117,8 @@ public class KHKsBwHdrCalculator_extended implements PlugIn {
 			weight[i] = ((int) gd.getNextNumber());
 			// System.out.println("weight-"+i+": "+weight[i]);
 		}
-		projImage = doMaskedAverageProjection();
+		/** Image to hold z-projection. */
+		ImagePlus projImage = doMaskedAverageProjection();
 		if ((arg.equals("")) && (projImage != null)) {
 			long tstop = System.currentTimeMillis();
 			projImage.setCalibration(imp.getCalibration());
@@ -136,13 +132,9 @@ public class KHKsBwHdrCalculator_extended implements PlugIn {
 
 	/**
 	 * Builds dialog to query users for projection parameters.
-	 * 
-	 * @param start
-	 *            starting slice to display
-	 * @param stop
-	 *            last slice
+	 *
 	 */
-	protected GenericDialog buildControlDialog(int start, int stop) {
+	protected GenericDialog buildControlDialog() {
 		GenericDialog gd = new GenericDialog("ZProjection", IJ.getInstance());
 		gd.addNumericField("Start slice:", startSlice, 0);
 		gd.addNumericField("Stop slice:", stopSlice, 0);
@@ -154,15 +146,15 @@ public class KHKsBwHdrCalculator_extended implements PlugIn {
 		return gd;
 	}
 
-	String makeTitle() {
+	private String makeTitle() {
 		String prefix = "KHKsBwHDR_";
 		return WindowManager.makeUniqueName(prefix + imp.getTitle());
 	}
 
-	ImagePlus doMaskedAverageProjection() {
+	private ImagePlus doMaskedAverageProjection() {
 		IJ.showStatus("Calculating median...");
 		ImageStack stack_local = imp.getStack();
-		sliceCount = (stopSlice - startSlice + 1);
+		int sliceCount = (stopSlice - startSlice + 1);
 		ImageProcessor[] slices = new ImageProcessor[sliceCount];
 		int index = 0;
 		// System.out.println("startSlice: " + startSlice);
@@ -192,7 +184,7 @@ public class KHKsBwHdrCalculator_extended implements PlugIn {
 		return new ImagePlus(makeTitle(), ip2);
 	}
 
-	float maskedAverage(float[] a) {
+	private float maskedAverage(float[] a) {
 		int divisor = a.length;
 		float sum = 0.0F;
 
@@ -216,7 +208,7 @@ public class KHKsBwHdrCalculator_extended implements PlugIn {
 				divisor -= 1;
 			}
 		}
-		float value = sum / divisor;
-		return value;
+
+		return sum / divisor;
 	}
 }

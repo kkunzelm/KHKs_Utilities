@@ -11,12 +11,12 @@ import ij.process.ImageProcessor;
  * @author Jeffrey Kuhn (jkuhn at ccwf.cc.utexas.edu)
  */
 public class KHKs_AddSliceToStack implements PlugIn {
-	boolean zeroFill = Prefs.get("resizer.zero", false);
-	int beforeFirstSlice = 0;
-	int afterLastSlice = 0;
+	private boolean zeroFill = Prefs.get("resizer.zero", false);
+	private int beforeFirstSlice = 0;
+	private int afterLastSlice = 0;
 
 	public void run(String arg) {
-		int wOld, hOld, wNew, hNew, lastSlice;
+		int wOld, hOld, wNew, hNew;
 
 		boolean fIsStack = false;
 
@@ -27,7 +27,6 @@ public class KHKs_AddSliceToStack implements PlugIn {
 		ImageStack stackOld = imp.getStack();
 		if ((stackOld != null) && (stackOld.getSize() > 1)) {
 			fIsStack = true;
-			lastSlice = imp.getStackSize();
 		}
 
 		String[] sPositions = {"Top-Left", "Top-Center", "Top-Right", "Center-Left", "Center", "Center-Right",
@@ -76,10 +75,6 @@ public class KHKs_AddSliceToStack implements PlugIn {
 				xOff = 0;
 				yOff = yC;
 				break;
-			case 4 : // C
-				xOff = xC;
-				yOff = yC;
-				break;
 			case 5 : // CR
 				xOff = xR;
 				yOff = yC;
@@ -96,6 +91,7 @@ public class KHKs_AddSliceToStack implements PlugIn {
 				xOff = xR;
 				yOff = yB;
 				break;
+			case 4 : // C -- case 4 and default are identical
 			default : // center
 				xOff = xC;
 				yOff = yC;
@@ -109,7 +105,7 @@ public class KHKs_AddSliceToStack implements PlugIn {
 			if (!IJ.macroRunning())
 				Undo.setup(Undo.COMPOUND_FILTER, imp);
 			ImageWindow win = imp.getWindow();
-			if (win != null && (win instanceof PlotWindow))
+			if (win instanceof PlotWindow)
 				// ((PlotWindow)win).getPlot().setFrozen(true);
 				IJ.log("Resizing of Plot Windows currently not supported.");
 			ImageProcessor newIP = expandImage(imp.getProcessor(), wNew, hNew, xOff, yOff);
@@ -122,7 +118,7 @@ public class KHKs_AddSliceToStack implements PlugIn {
 			overlay.translate(xOff, yOff);
 	}
 
-	public ImageStack expandStack(ImageStack stackOld, int wNew, int hNew, int xOff, int yOff) {
+	private ImageStack expandStack(ImageStack stackOld, int wNew, int hNew, int xOff, int yOff) {
 		int nFrames = stackOld.getSize();
 		ImageProcessor ipOld = stackOld.getProcessor(1);
 		java.awt.Color colorBack = Toolbar.getBackgroundColor();
@@ -175,7 +171,7 @@ public class KHKs_AddSliceToStack implements PlugIn {
 		return stackNew;
 	}
 
-	public ImageProcessor expandImage(ImageProcessor ipOld, int wNew, int hNew, int xOff, int yOff) {
+	private ImageProcessor expandImage(ImageProcessor ipOld, int wNew, int hNew, int xOff, int yOff) {
 		ImageProcessor ipNew = ipOld.createProcessor(wNew, hNew);
 		if (zeroFill)
 			ipNew.setValue(0.0);

@@ -1,5 +1,8 @@
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 
 import ij.IJ;
 import ij.ImagePlus;
@@ -59,8 +62,7 @@ import ij.process.ImageStatistics;
  */
 public class Measure_Stacks implements PlugInFilter, Measurements {
 
-	ImagePlus imp;
-	int baseCapabilities = DOES_ALL;
+	private ImagePlus imp;
 
 	public int setup(String arg, ImagePlus imp) {
 		this.imp = imp;
@@ -69,33 +71,33 @@ public class Measure_Stacks implements PlugInFilter, Measurements {
 	}
 
 	public void run(ImageProcessor ip) {
-		int numSlices = imp.getStackSize();
-		ImageStack stack = imp.getStack();
-		MeasureStacks ms = new MeasureStacks(imp);
+		new MeasureStacks(imp);
 	}
 
 }
 
 class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowListener {
-	protected static final int NPOLY = 1000;
-	protected final Object resource = "resource";// For synchronization.
-	protected ImagePlus imp;
-	protected ImageStack stack;
-	protected int oldSlice;
-	protected boolean done = false;
-	protected Thread thread;
-	protected Button spacing, review, measure, clearOutsideWithNan, fillWithNan, clearOutsideWithForegroundColor,
-			clearOutsideWithBackgroundColor, fillWithForeground, fillWithBackground, quit;
-	protected Roi[] roi;
-	protected boolean[] userInput;
-	protected int numSlices;
-	protected int roiType = -1;
-	protected double sliceSpacing = 1;
-	protected int[][] lineEnds;
-	protected int[] ends;
-	protected Animator anim;
-	protected MeasureStackReviewer rev;
-	protected ImageProcessor mask;
+	private static final int NPOLY = 1000;
+	private final Object resource = "resource";// For synchronization.
+	private final ImagePlus imp;
+	private final Roi[] roi;
+	private final boolean[] userInput;
+	private final int numSlices;
+	private int oldSlice;
+	private boolean done = false;
+	private Button spacing;
+	private Button review;
+	private Button measure;
+	private Button clearOutsideWithNan;
+	private Button fillWithNan;
+	private Button clearOutsideWithForegroundColor;
+	private Button clearOutsideWithBackgroundColor;
+	private Button fillWithForeground;
+	private Button fillWithBackground;
+	private Button quit;
+	private int roiType = -1;
+	private double sliceSpacing = 1;
+	private ImageProcessor mask;
 
 	public MeasureStacks(ImagePlus imp) {
 		// super((Frame)WindowManager.getCurrentImage().getWindow(),"Measure
@@ -103,15 +105,13 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 		super(IJ.getInstance(), "Measure Stack", false);
 		addWindowListener(this);
 		this.imp = imp;
-		stack = imp.getStack();
 		numSlices = imp.getStackSize();
 		roi = new Roi[numSlices];
-		anim = new Animator();
 		userInput = new boolean[numSlices];
 		for (int i = 0; i < numSlices; i++)
 			userInput[i] = false;
 		oldSlice = imp.getCurrentSlice();
-		thread = new Thread(this, "MeasureStack");
+		Thread thread = new Thread(this, "MeasureStack");
 
 		// Off-screen, blank image for Line ROIs
 		Image img = GUI.createBlankImage(imp.getWidth(), imp.getHeight());
@@ -162,7 +162,7 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 		while (!done) {
 			try {
 				Thread.sleep(20);
-			} catch (InterruptedException e) {
+			} catch (InterruptedException ignored) {
 			}
 			synchronized (resource) {// Obtain a lock to aviod interfering with doMeasurements.
 				checkSlice();
@@ -283,8 +283,8 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 		if (type1 != type2)
 			return true;
 
-		Rectangle rect1 = roi1.getBoundingRect();
-		Rectangle rect2 = roi2.getBoundingRect();
+		Rectangle rect1 = roi1.getBounds();
+		Rectangle rect2 = roi2.getBounds();
 		if (rect1.x != rect2.x)
 			return true;
 		if (rect1.y != rect2.y)
@@ -345,17 +345,19 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 					type1 = Roi.POLYLINE;
 				if (type2 == Roi.FREELINE)
 					type2 = Roi.POLYLINE;
-				Rectangle rect1 = roi1.getBoundingRect();
-				Rectangle rect2 = roi2.getBoundingRect();
+				Rectangle rect1 = roi1.getBounds();
+				Rectangle rect2 = roi2.getBounds();
 				if ((type1 == Roi.RECTANGLE) | (type1 == Roi.OVAL)) {
 					int x = (int) Math.round(w1 * rect1.x + w2 * rect2.x);
 					int y = (int) Math.round(w1 * rect1.y + w2 * rect2.y);
 					int width = (int) Math.round(w1 * rect1.width + w2 * rect2.width);
 					int height = (int) Math.round(w1 * rect1.height + w2 * rect2.height);
 					if (type1 == Roi.OVAL) {
-						result = new OvalRoi(x, y, width, height, imp);
+						result = new OvalRoi(x, y, width, height);
+						result.setImage(imp);
 					} else {
-						result = new Roi(x, y, width, height, imp);
+						result = new Roi(x, y, width, height);
+						result.setImage(imp);
 					}
 					imp.setRoi(result);
 				} else if (type1 == Roi.LINE) {
@@ -365,7 +367,8 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 					int oy1 = (int) Math.round(w1 * r1.y1 + w2 * r2.y1);
 					int ox2 = (int) Math.round(w1 * r1.x2 + w2 * r2.x2);
 					int oy2 = (int) Math.round(w1 * r1.y2 + w2 * r2.y2);
-					Line rl = new Line(ox1, oy1, ox2, oy2, imp);
+					Line rl = new Line(ox1, oy1, ox2, oy2);
+					rl.setImage(imp);
 					rl.x1 = ox1;// Strangely, this seems necessary.
 					rl.y1 = oy1;
 					rl.x2 = ox2;
@@ -394,17 +397,18 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 						x2[i] = x2Data[i] + rect2.x;
 						y2[i] = y2Data[i] + rect2.y;
 					}
-					double[] arc1 = arcLength(n1, x1, y1, NPOLY - 1);
-					double[] arc2 = arcLength(n2, x2, y2, NPOLY - 1);
-					double[] x1Interp = interp(n1, arc1, x1, NPOLY);
-					double[] y1Interp = interp(n1, arc1, y1, NPOLY);
-					double[] x2Interp = interp(n2, arc2, x2, NPOLY);
-					double[] y2Interp = interp(n2, arc2, y2, NPOLY);
+					double[] arc1 = arcLength(n1, x1, y1);
+					double[] arc2 = arcLength(n2, x2, y2);
+					double[] x1Interp = interp(n1, arc1, x1);
+					double[] y1Interp = interp(n1, arc1, y1);
+					double[] x2Interp = interp(n2, arc2, x2);
+					double[] y2Interp = interp(n2, arc2, y2);
 					int[] x = interpCoords(NPOLY, w1, w2, x1Interp, x2Interp);
 					int[] y = interpCoords(NPOLY, w1, w2, y1Interp, y2Interp);
-					int xLoc = locate(NPOLY, x);
-					int yLoc = locate(NPOLY, y);
-					result = new PolygonRoi(x, y, x.length, imp, type1);
+					int xLoc = locate(x);
+					int yLoc = locate(y);
+					result = new PolygonRoi(x, y, x.length, type1);
+					result.setImage(imp);
 					result.setLocation(xLoc, yLoc);
 					imp.setRoi(result);
 				}
@@ -417,11 +421,11 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 	 * Interpolate f, given at n t values, at integer points 0,...,nOut-1. It can be
 	 * assumed that t is increasing, t[0] = 0, and t[n-1] = nOut - 1.
 	 */
-	double[] interp(int n, double[] t, int[] f, int nOut) {
-		double[] result = new double[nOut];
+	private double[] interp(int n, double[] t, int[] f) {
+		double[] result = new double[MeasureStacks.NPOLY];
 		result[0] = f[0];
 		int jBeyond = 1;
-		for (int i = 1; i < nOut; i++) {
+		for (int i = 1; i < MeasureStacks.NPOLY; i++) {
 			while (t[jBeyond] < i) {
 				if (jBeyond == (n - 1))
 					break;
@@ -438,25 +442,25 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 	}
 
 	/* Subtract the minimum */
-	int locate(int n, int[] x) {
+	private int locate(int[] x) {
 		int result = x[0];
-		for (int i = 1; i < n; i++) {
+		for (int i = 1; i < MeasureStacks.NPOLY; i++) {
 			if (x[i] < result)
 				result = x[i];
 		}
-		for (int i = 0; i < n; i++)
+		for (int i = 0; i < MeasureStacks.NPOLY; i++)
 			x[i] -= result;
 		return result;
 	}
 
-	double[] arcLength(int n, int[] x, int[] y, double fullLength) {
+	private double[] arcLength(int n, int[] x, int[] y) {
 		double[] result = new double[n];
 		result[0] = 0;
 		for (int i = 1; i < n; i++) {
 			result[i] = result[i - 1]
 					+ Math.sqrt((x[i] - x[i - 1]) * (x[i] - x[i - 1]) + (y[i] - y[i - 1]) * (y[i] - y[i - 1]));
 		}
-		double scale = result[n - 1] / fullLength;
+		double scale = result[n - 1] / NPOLY - 1;
 		if (scale > 0) {
 			for (int i = 1; i < n; i++) {
 				result[i] /= scale;
@@ -483,8 +487,6 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 	}
 	public void windowDeactivated(WindowEvent e) {
 	}
-	public void focusLost(FocusEvent e) {
-	}
 	public void windowDeiconified(WindowEvent e) {
 	}
 	public void windowIconified(WindowEvent e) {
@@ -501,7 +503,7 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 
 	}
 
-	void getSpacing() {
+	private void getSpacing() {
 		GenericDialog gd = new GenericDialog("Slice Spacing...", IJ.getInstance());
 		gd.addNumericField("Distance between slices (for volume) ", sliceSpacing, 5);
 		gd.showDialog();
@@ -522,8 +524,8 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 		if (gd.wasCanceled())
 			return imp;
 		int index = gd.getNextChoiceIndex();
-		ImagePlus result = WindowManager.getImage(wList[index]);
-		return result;
+
+		return WindowManager.getImage(wList[index]);
 	}
 
 	public void doMeasurements() {
@@ -552,10 +554,10 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 			imp.setSlice(oldSlice);
 			showRoi(oldSlice, imp);
 
-			int cA = 0;
-			int cM = 0;
-			double sum = 0;
-			double total = 0;
+			int cA;
+			int cM;
+			double sum;
+			double total;
 
 			IJ.write("");
 			// Area measurements
@@ -564,7 +566,7 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 				if (cA != ResultsTable.COLUMN_NOT_FOUND) {
 					sum = 0;
 					for (int i = 0; i < rt.getCounter(); i++) {
-						sum += rt.getValue(cA, i);
+						sum += rt.getValueAsDouble(cA, i);
 					}
 					IJ.write("Volume: " + IJ.d2s(sum * sliceSpacing, 3));
 
@@ -574,15 +576,15 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 							if (cM != ResultsTable.COLUMN_NOT_FOUND) {
 								total = 0;
 								for (int i = 0; i < rt.getCounter(); i++) {
-									total += rt.getValue(cM, i) * rt.getValue(cA, i);
+									total += rt.getValueAsDouble(cM, i) * rt.getValueAsDouble(cA, i);
 								}
 								IJ.write("Overall Volume Mean: " + IJ.d2s(total / sum, 3));
 							}
 						}
-					} catch (IllegalArgumentException ila_mean) {
+					} catch (IllegalArgumentException ignored) {
 					}
 				}
-			} catch (IllegalArgumentException ila) {
+			} catch (IllegalArgumentException ignored) {
 			}
 		}
 	}
@@ -595,7 +597,7 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 			updateCurrentRoi();
 			doMeasurements();
 		} else if (b == review) {
-			rev = new MeasureStackReviewer(imp);
+			new MeasureStackReviewer(imp);
 		} else if (b == clearOutsideWithNan) {
 			updateCurrentRoi();
 			clearOutsideWithNan();
@@ -894,12 +896,11 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 }
 
 class MeasureStackReviewer implements Runnable {
-	protected ImagePlus imp;
-	protected Thread thread;
-	protected int reviewTime = 50;
+	private final ImagePlus imp;
+
 	public MeasureStackReviewer(ImagePlus imp) {
 		this.imp = imp;
-		thread = new Thread(this, "Reviewer");
+		Thread thread = new Thread(this, "Reviewer");
 		thread.start();
 	}
 	public void run() {
@@ -907,14 +908,15 @@ class MeasureStackReviewer implements Runnable {
 		int numSlices = imp.getStackSize();
 		if (!(win instanceof StackWindow))
 			return;
-		StackWindow swin = (StackWindow) win;
+
 		Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
 		int oldSlice = imp.getCurrentSlice();
+		int reviewTime = 50;
 		for (int slice = 1; slice <= numSlices; slice++) {
 			imp.setSlice(slice);
 			try {
 				Thread.sleep(reviewTime);
-			} catch (InterruptedException e) {
+			} catch (InterruptedException ignored) {
 			}
 		}
 		imp.setSlice(oldSlice);

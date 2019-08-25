@@ -53,19 +53,17 @@ public class ConvertBinaryStackTo2dHeightMap_ implements PlugIn {
 	 * MEDIAN_METHOD = 5;
 	 */
 
-	public static final int HEIGHT_MAP = 6;
-	public static final String[] METHODS = {"2D-HeightMap"};
-	public static final String lutMessage = "Stacks with inverter LUTs may not project correctly.\n"
+	private static final int HEIGHT_MAP = 6;
+	private static final String lutMessage = "Stacks with inverter LUTs may not project correctly.\n"
 			+ "To create a standard LUT, invert the stack (Edit/Invert)\n"
 			+ "and invert the LUT (Image/Lookup Tables/Invert LUT).";
 	private static final String METHOD_KEY = "zproject.method";
+	private final int increment = 1;
 	private int method = (int) Prefs.get(METHOD_KEY, HEIGHT_MAP);
 	/** Image to hold z-projection. */
 	private ImagePlus projImage = null;
-
 	/** Image stack to project. */
 	private ImagePlus imp = null;
-
 	/** Projection starts from this slice. */
 	private int startSlice = 1;
 	/** Projection ends at this slice. */
@@ -74,9 +72,7 @@ public class ConvertBinaryStackTo2dHeightMap_ implements PlugIn {
 	private boolean allTimeFrames = true;
 	private boolean invertedProjectionDirection = false;
 	private int voxelSizeZ = 1;
-
 	private boolean isHyperstack;
-	private int increment = 1;
 	private int sliceCount;
 
 	public ConvertBinaryStackTo2dHeightMap_() {
@@ -155,7 +151,7 @@ public class ConvertBinaryStackTo2dHeightMap_ implements PlugIn {
 			stopSlice = stackSize;
 
 		// Build control dialog
-		GenericDialog gd = buildControlDialog(startSlice, stopSlice);
+		GenericDialog gd = buildControlDialog();
 		gd.showDialog();
 		if (gd.wasCanceled())
 			return;
@@ -180,19 +176,14 @@ public class ConvertBinaryStackTo2dHeightMap_ implements PlugIn {
 
 		imp.unlock();
 		IJ.register(ConvertBinaryStackTo2dHeightMap_.class);
-		return;
 	}
 
 	/**
 	 * Builds dialog to query users for projection parameters.
 	 * 
-	 * @param start
-	 *            starting slice to display
-	 * @param stop
-	 *            last slice
 	 * @return
 	 */
-	protected GenericDialog buildControlDialog(int start, int stop) {
+	protected GenericDialog buildControlDialog() {
 		GenericDialog gd = new GenericDialog("ZProjection", IJ.getInstance());
 		gd.addNumericField("Start slice:", startSlice, 0/* digits */);
 		gd.addNumericField("Stop slice:", stopSlice, 0/* digits */);
@@ -221,17 +212,15 @@ public class ConvertBinaryStackTo2dHeightMap_ implements PlugIn {
 
 	}
 
-	String makeTitle() {
+	private String makeTitle() {
 		String prefix = "zProj_";
-		switch (method) {
-			case HEIGHT_MAP :
-				prefix = "2dMap_";
-				break;
+		if (method == HEIGHT_MAP) {
+			prefix = "2dMap_";
 		}
 		return WindowManager.makeUniqueName(prefix + imp.getTitle());
 	}
 
-	ImagePlus doHeightMapProjection() {
+	private ImagePlus doHeightMapProjection() {
 		IJ.showStatus("Calculating 2d Height Map...");
 		ImageStack stack = imp.getStack();
 
@@ -242,7 +231,7 @@ public class ConvertBinaryStackTo2dHeightMap_ implements PlugIn {
 		ImageProcessor ip2 = slices[0].duplicate();
 		ip2 = ip2.convertToFloat();
 		ip2.multiply(0.0);
-		float[] values = new float[sliceCount];
+
 		int width = ip2.getWidth();
 		int height = ip2.getHeight();
 		int inc = Math.max(height / 30, 1); // for ProgressBar
