@@ -131,7 +131,7 @@ public class KHKsBwHdrCalculator_extended implements PlugIn {
 		}
 
 		imp.unlock();
-		IJ.register(KHKsBwHdrCalculator_.class);
+		IJ.register(KHKsBwHdrCalculator_extended.class);
 	}
 
 	/**
