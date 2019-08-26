@@ -6,17 +6,18 @@ import java.awt.event.WindowListener;
 
 import ij.IJ;
 import ij.ImagePlus;
-import ij.ImageStack;
 import ij.WindowManager;
 import ij.gui.*;
 import ij.measure.Measurements;
 import ij.measure.ResultsTable;
-import ij.plugin.Animator;
 import ij.plugin.filter.Analyzer;
 import ij.plugin.filter.PlugInFilter;
 import ij.process.ByteProcessor;
 import ij.process.ImageProcessor;
 import ij.process.ImageStatistics;
+import ij.text.TextPanel;
+
+import javax.swing.*;
 
 /**
  * KH: obviously KHs Version - überarbeitet 21.8.2009
@@ -113,14 +114,10 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 		oldSlice = imp.getCurrentSlice();
 		Thread thread = new Thread(this, "MeasureStack");
 
-		// Off-screen, blank image for Line ROIs
-		Image img = GUI.createBlankImage(imp.getWidth(), imp.getHeight());
-		Graphics g = img.getGraphics();
-
 		setup();
 		thread.start();
 	}
-	public void setup() {
+	private void setup() {
 		setLayout(new GridLayout(2, 2, 5, 5));
 		// setLayout(new BorderLayout(3,3));
 		spacing = new Button("Slice Spacing");
@@ -170,7 +167,7 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 		}
 	}
 
-	public void checkSlice() {
+	private void checkSlice() {
 		int slice = imp.getCurrentSlice();
 		if (slice != oldSlice) {
 			// System.out.println("slice moved: "+oldSlice+" to "+slice);
@@ -179,7 +176,7 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 		}
 	}
 
-	public void updateCurrentRoi() {
+	private void updateCurrentRoi() {
 		// Update the stored ROI for the old slice if the user changed it.
 		Roi newRoi = imp.getRoi();
 		int slice = imp.getCurrentSlice();
@@ -209,7 +206,7 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 		}
 	}
 
-	public void updateRoi(int oldSlice, int slice) {
+	private void updateRoi(int oldSlice, int slice) {
 		// Update the stored ROI for the old slice if the user changed it.
 		Roi newRoi = imp.getRoi();
 		if (newRoi == null) {
@@ -239,7 +236,7 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 		showRoi(slice, imp);
 	}
 
-	public void showRoi(int slice, ImagePlus imp) {
+	private void showRoi(int slice, ImagePlus imp) {
 		// Interpolate the roi for slice from leading and following slices
 		// that have user input roi's.
 		// First check to see of the slice itself has user input.
@@ -273,7 +270,7 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 		userInput[slice - 1] = false;
 	}
 
-	public boolean differentRoi(Roi roi1, Roi roi2) {
+	private boolean differentRoi(Roi roi1, Roi roi2) {
 		int type1 = roi1.getType();
 		if (type1 == Roi.FREELINE)
 			type1 = Roi.POLYLINE;
@@ -325,7 +322,7 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 		return false;
 	}
 
-	public Roi roiInterp(double w1, double w2, Roi roi1, Roi roi2) {
+	private Roi roiInterp(double w1, double w2, Roi roi1, Roi roi2) {
 		imp.killRoi();
 		Roi result = null;
 		if ((roi1 != null) || (roi2 != null)) {
@@ -470,7 +467,7 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 	}
 
 	/* Interpolate two curves. */
-	public int[] interpCoords(int n, double w1, double w2, double[] x1, double[] x2) {
+    private int[] interpCoords(int n, double w1, double w2, double[] x1, double[] x2) {
 		int[] result = new int[n];
 		for (int i = 0; i < n; i++) {
 			result[i] = (int) Math.round(w1 * x1[i] + w2 * x2[i]);
@@ -494,7 +491,7 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 	public void windowOpened(WindowEvent e) {
 	}
 
-	public void shutDown() {
+	private void shutDown() {
 		done = true;
 		Roi.setColor(Color.yellow);
 		imp.killRoi();
@@ -510,7 +507,7 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 		sliceSpacing = gd.getNextNumber();
 	}
 
-	public ImagePlus chooseStack(ImagePlus imp) {
+	private ImagePlus chooseStack(ImagePlus imp) {
 		int[] wList = WindowManager.getIDList();
 		String[] titles = new String[wList.length];
 		for (int i = 0; i < wList.length; i++) {
@@ -528,7 +525,7 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 		return WindowManager.getImage(wList[index]);
 	}
 
-	public void doMeasurements() {
+	private void doMeasurements() {
 		IJ.run("Clear Results");
 		int measurements = Analyzer.getMeasurements();
 		Analyzer.setMeasurements(measurements);
@@ -623,7 +620,7 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 
 	// KH
 
-	public synchronized void clearOutsideWithNan() {
+	private synchronized void clearOutsideWithNan() {
 		synchronized (resource) {// Lock out checkSlice.
 
 			ImagePlus impMeas = chooseStack(imp);// Get the stack to measure
@@ -672,7 +669,7 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 		}
 	}
 
-	public void fillWithNan() {
+	private void fillWithNan() {
 
 		synchronized (resource) {// Lock out checkSlice.
 
@@ -708,7 +705,7 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 
 	}
 
-	public synchronized void clearOutsideWithForegroundColor() {
+	private synchronized void clearOutsideWithForegroundColor() {
 
 		synchronized (resource) {// Lock out checkSlice.
 
@@ -759,7 +756,7 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 
 	}
 
-	public void fillWithForegroundColor() {
+	private void fillWithForegroundColor() {
 
 		synchronized (resource) {// Lock out checkSlice.
 
@@ -794,7 +791,7 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 		}
 	}
 
-	public synchronized void clearOutsideWithBackgroundColor() {
+	private synchronized void clearOutsideWithBackgroundColor() {
 
 		synchronized (resource) {// Lock out checkSlice.
 
@@ -845,7 +842,7 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 
 	}
 
-	public void fillWithBackgroundColor() {
+	private void fillWithBackgroundColor() {
 
 		synchronized (resource) {// Lock out checkSlice.
 
@@ -881,7 +878,7 @@ class MeasureStacks extends Dialog implements ActionListener, Runnable, WindowLi
 
 	}
 
-	public void makeMask(ImageProcessor ip, Rectangle r) {
+	private void makeMask(ImageProcessor ip, Rectangle r) {
 		mask = ip.getMask();
 		if (mask == null) {
 			mask = new ByteProcessor(r.width, r.height);

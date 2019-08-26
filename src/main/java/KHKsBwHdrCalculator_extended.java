@@ -39,32 +39,14 @@ public class KHKsBwHdrCalculator_extended implements PlugIn {
 
 	private int[] weight;
 
-	public KHKsBwHdrCalculator_extended() {
-	}
-
-	/** Construction of KHKsBwHdrCalculator_ with image to be projected. */
-	public KHKsBwHdrCalculator_extended(ImagePlus imp) {
-		setImage(imp);
-	}
-
-	/**
-	 * Explicitly set image to be projected. This is useful if ZProjection_ object
-	 * is to be used not as a plugin but as a stand alone processing object.
-	 */
-	private void setImage(ImagePlus imp) {
-		this.imp = imp;
-		startSlice = 1;
-		stopSlice = imp.getStackSize();
-	}
-
-	public void setStartSlice(int slice) {
+	private void setStartSlice(int slice) {
 		if ((imp == null) || (slice < 1) || (slice > imp.getStackSize())) {
 			return;
 		}
 		startSlice = slice;
 	}
 
-	public void setStopSlice(int slice) {
+	private void setStopSlice(int slice) {
 		if ((imp == null) || (slice < 1) || (slice > imp.getStackSize())) {
 			return;
 		}
@@ -134,7 +116,7 @@ public class KHKsBwHdrCalculator_extended implements PlugIn {
 	 * Builds dialog to query users for projection parameters.
 	 *
 	 */
-	protected GenericDialog buildControlDialog() {
+	private GenericDialog buildControlDialog() {
 		GenericDialog gd = new GenericDialog("ZProjection", IJ.getInstance());
 		gd.addNumericField("Start slice:", startSlice, 0);
 		gd.addNumericField("Stop slice:", stopSlice, 0);

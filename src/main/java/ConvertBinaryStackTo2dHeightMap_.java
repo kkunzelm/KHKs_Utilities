@@ -75,47 +75,19 @@ public class ConvertBinaryStackTo2dHeightMap_ implements PlugIn {
 	private boolean isHyperstack;
 	private int sliceCount;
 
-	public ConvertBinaryStackTo2dHeightMap_() {
-	}
-
-	/** Construction of ZProjector with image to be projected. */
-	public ConvertBinaryStackTo2dHeightMap_(ImagePlus imp) {
-		setImage(imp);
-	}
-
-	/**
-	 * Explicitly set image to be projected. This is useful if ZProjection_ object
-	 * is to be used not as a plugin but as a stand alone processing object.
-	 */
-	public void setImage(ImagePlus imp) {
-		this.imp = imp;
-		startSlice = 1;
-		stopSlice = imp.getStackSize();
-		System.out.println("stack size: " + stopSlice);
-	}
-
-	public void setStartSlice(int slice) {
+    private void setStartSlice(int slice) {
 		if (imp == null || slice < 1 || slice > imp.getStackSize())
 			return;
 		startSlice = slice;
 	}
 
-	public void setStopSlice(int slice) {
+	private void setStopSlice(int slice) {
 		if (imp == null || slice < 1 || slice > imp.getStackSize())
 			return;
 		stopSlice = slice;
 	}
 
-	public void setMethod(int projMethod) {
-		method = projMethod;
-	}
-
-	/** Retrieve results of most recent projection operation. */
-	public ImagePlus getProjection() {
-		return projImage;
-	}
-
-	public void run(String arg) {
+    public void run(String arg) {
 		imp = WindowManager.getCurrentImage();
 		if (imp == null) {
 			IJ.noImage();
@@ -183,7 +155,7 @@ public class ConvertBinaryStackTo2dHeightMap_ implements PlugIn {
 	 * 
 	 * @return
 	 */
-	protected GenericDialog buildControlDialog() {
+    private GenericDialog buildControlDialog() {
 		GenericDialog gd = new GenericDialog("ZProjection", IJ.getInstance());
 		gd.addNumericField("Start slice:", startSlice, 0/* digits */);
 		gd.addNumericField("Stop slice:", stopSlice, 0/* digits */);
@@ -195,7 +167,7 @@ public class ConvertBinaryStackTo2dHeightMap_ implements PlugIn {
 	}
 
 	/** Performs actual projection using specified method. */
-	public void doProjection() {
+    private void doProjection() {
 		if (imp == null)
 			return;
 		sliceCount = 0;
